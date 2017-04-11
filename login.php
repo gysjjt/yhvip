@@ -15,8 +15,8 @@ if($_GET['action'] == "code"){//获取验证码
 	$login = urlencode($_POST['login']);
 	$passwd = $_POST['passwd'];
 	$rand = $_POST['rand'];
-	//$params = "a=LoginIn&u=$login&p=$passwd&c=$rand&ts=0.6658900876500904&hi=";
-	$curl -> url = "http://vip.minicon.net/ajaxapp/commonajaxquery.ashx?a=LoginIn&u=$login&p=$passwd&ts=0.6658900876500904&hi=";
+	$params = "username=$login&password=$passwd&disksn=&rememberme=false&service=http%3A%2F%2Fqht.cloudvast.com%2Findex.do%3Bjsessionid%3DEA527163685A68DEC0B0E83BD3783CC5-n1.q2";
+	$curl -> url = "http://login.cloudvast.com/login";
 	$curl -> params = '';
 	$result = $curl -> login();
 	if($result == '0' || $result == 0){
