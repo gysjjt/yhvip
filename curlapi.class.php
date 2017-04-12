@@ -65,7 +65,7 @@ class curlapi{
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		$result=curl_exec($ch);
 		preg_match_all("/Set-Cookie:(.*);/siU", $result, $arr);
-		$_SESSION['cookies'] = $arr[1][1];
+		$_SESSION['cookies'] = $arr[1][0];
 
 		if (curl_getinfo($ch, CURLINFO_HTTP_CODE) == '200') {
 			$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
@@ -174,65 +174,44 @@ class curlapi{
      * @param $html
      * @param $shopname
      */
-	public function downMembersCvs($html,$shopname){
-		$rules = array(
-			//采集tr中的纯文本内容
-			'other' => array('tr','html'),
-		);
-		$newdata = array();
-		$data = QueryList::Query($html, $rules)->data;
-
+	public function downMembersCvs($data,$shopname){
 		foreach ($data as $k => &$item) {
-			$other = explode('</td>', $item['other']);
-
-			if(count($other) > 12) {
-
-				//unset($other[0]);//去掉第一空白项
-                //unset($other[14]);//去掉14项
-                //unset($other[15]);//去掉15项
-                //unset($other[18]);//去掉15项
-				$item['other'] = $other;
-
-
-				//会员详情地址
-				$k11 = 11;
-				preg_match_all('/<a href=\"(.*)\">修改<\/a>/isU', $other[$k11], $detail);
-				$other[$k11] = isset($detail[1][0])?$detail[1][0]:0;
-
-				foreach ($other as &$v1) {
-					$v1 = strip_tags($v1);;
+			if(count($item) > 12) {
+				foreach ($item as &$v1) {
+					//$v1 = strip_tags($v1);;
 					$v1 = preg_replace("/\s\n\t/","",$v1);
 					$v1 = str_replace(' ', '', $v1);
 					$v1 = trim(str_replace(PHP_EOL, '', $v1));
 					$v1 = str_replace('&nbsp;','',$v1);
 				}
 
+				$other = $item;
 				//卡号
-				$newdata[$k][0] = "\t".$other[1]; //卡号
-				$newdata[$k][1] = $other[2]; //姓名
-				$newdata[$k][2] = $other[0]; //手机号
-				$newdata[$k][3] = ''; //性别
+				$newdata[$k][0] = "\t".$other['cardNumber']; //卡号
+				$newdata[$k][1] = $other['name']; //姓名
+				$newdata[$k][2] = $other['mobilePhone']; //手机号
+				$newdata[$k][3] = $other['sex'] == 2?'女':'男'; //性别
 
 				//卡类型
-				$newdata[$k][4] = $other[5]; //卡类型
+				$newdata[$k][4] = $other['levelName']; //卡类型
 
-				$newdata[$k][5] = $other[3]; //折扣
+				$newdata[$k][5] = 10; //折扣
 
 				//卡金余额信息,
-				$newdata[$k][6] = $other[6]; //卡金余额
-				$newdata[$k][12] = $other[8]; //欠款
-				$newdata[$k][7] = 0; //充值总额
+				$newdata[$k][6] = $other['balanceOfCash']; //卡金余额
+				$newdata[$k][12] = $other['owedAmount']; //欠款
+				$newdata[$k][7] = $other['totalCash']; //充值总额
 				$newdata[$k][9] = 0; //消费总额
-				$newdata[$k][10] = 0; //赠送金
-				$newdata[$k][8] = $other[7]; //消费次数
-				$newdata[$k][11] = $other[9]; //积分
-				$newdata[$k][13] = ''; //开卡时间
+				$newdata[$k][10] = $other['balanceOfBonus']; //赠送金
+				$newdata[$k][8] = $other['totalConsumedTimes']; //消费次数
+				$newdata[$k][11] = $other['balanceOfPoints']; //积分
+				$newdata[$k][13] = date('Y-m-d', $other['createDate']/1000); //开卡时间
 
-				$newdata[$k][14] = $other[10]; //最后消费时间
-				$newdata[$k][15] = ''; //生日
-				$newdata[$k][16] = ''; //会员备注
+				$newdata[$k][14] = date('Y-m-d H:i:s', $other['lastConsumeDate']/1000); //最后消费时间
+				$newdata[$k][15] = date('Y-m-d', $other['birthDay']/1000); //生日
+				$newdata[$k][16] = $other['remark']; //会员备注
 
-				$newdata[$k][17] = $other[11]; //会员详情地址
+				$newdata[$k][17] = ''; //会员详情地址
 				ksort($newdata[$k]);
 			}
 		}
@@ -243,60 +222,6 @@ class curlapi{
 		$cvsstr = iconv('utf-8','gb2312//ignore',$cvsstr);
 
 		foreach($newdata as &$v){
-			//获取会员备注和欠款
-			$par = trim($v[17]);
-			$this -> url = "http://vip.minicon.net/iframepage/apppage/$par";
-			$rs = $this -> curl();
-
-			//性别
-			$sex = '';
-			$rules = array(
-				'1' => array('#rblSex #rblSex_0','checked'),
-				'2' => array('#rblSex #rblSex_1','checked'),
-				'3' => array('#rblSex #rblSex_2','checked'),
-			);
-			$rblSex = QueryList::Query($rs, $rules)->data;
-			foreach ($rblSex[0] as $k=>$rv){
-				if($rv == 'checked'){
-					$sex = $k;
-				}
-			}
-
-			if($sex == 1){
-				$v[3] = '女';
-			} else if($sex == 2){
-				$v[3] = '男';
-			}
-
-			//赠送金
-			$rules = array(
-				'txbZSMoney' => array('#txbZSMoney','value'),
-			);
-			$txbZSMoney = QueryList::Query($rs, $rules)->data;
-			$v[10] = $txbZSMoney[0]['txbZSMoney'];
-
-			//开卡时间
-			$rules = array(
-				'txbKKDate' => array('#txbKKDate','value'),
-			);
-			$txbKKDate = QueryList::Query($rs, $rules)->data;
-			$v[13] = $txbKKDate[0]['txbKKDate'];
-
-			//生日
-			$rules = array(
-				'txbBirthday' => array('#txbBirthday','value'),
-			);
-			$txbBirthday = QueryList::Query($rs, $rules)->data;
-			$v[15] = isset($txbBirthday[0]['txbBirthday'])?$txbBirthday[0]['txbBirthday']:'';
-
-			//会员备注
-			$rules = array(
-				'txbRemark' => array('#txbRemark','value'),
-			);
-			$txbRemark = QueryList::Query($rs, $rules)->data;
-			$v[16] = $txbRemark[0]['txbRemark'];
-			
-			unset($v[17]);
 			foreach($v as $k=>&$v1){
 				//转码
 				$cvsdata = iconv('utf-8','gb2312//ignore',$v1);

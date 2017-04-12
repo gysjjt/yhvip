@@ -12,12 +12,12 @@ if($_GET['action'] == "code"){//获取验证码
 	$curl -> url = "http://vip.minicon.net/validatecode.aspx";
 	echo $curl -> get_code();
 }else if($_GET['action'] == "login"){
-	$login = urlencode($_POST['login']);
-	$passwd = $_POST['passwd'];
-	$rand = $_POST['rand'];
+	$login = 'ncbln';//urlencode($_POST['login']);
+	$passwd = 'bln0807'; //$_POST['passwd'];
+	$rand = '123'; //$_POST['rand'];
 	$params = "username=$login&password=$passwd&disksn=&rememberme=false&service=http%3A%2F%2Fqht.cloudvast.com%2Findex.do%3Bjsessionid%3DEA527163685A68DEC0B0E83BD3783CC5-n1.q2";
 	$curl -> url = "http://login.cloudvast.com/login";
-	$curl -> params = '';
+	$curl -> params = $params;
 	$result = $curl -> login();
 	if($result == '0' || $result == 0){
 		echo 1;
@@ -25,35 +25,33 @@ if($_GET['action'] == "code"){//获取验证码
 		echo "账号密码或者验证码错误";
 	}
 }else if($_GET['action'] == 'curlmember'){
-	$shopname = $_REQUEST['shopname'];
-	$data = '';
+	$shopname = isset($_REQUEST['shopname'])?$_REQUEST['shopname']:'会员';
+	$data = array();
 
     //获取总数
-    $curl -> url = "http://vip.minicon.net/iframepage/apppage/member_list.aspx";
-    $rs = $curl -> curl();
-    preg_match('/共(.*)条记录/isU', $rs, $totals);
-    $totals = isset($totals[1])?$totals[1]:100;
-	$totals = preg_replace("/\s\n\t/","",$totals);
-	$totals = str_replace('&nbsp;','',$totals);
+	$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=0&limit=50&field=cardNumber&total=7406";
+	$rs = $curl -> getMembersPage();
+	$rs = json_decode($rs,true);
+    $totals = isset($rs['total'])?$rs['total']:10;
+
     //总页数
     $pages = ceil($totals/50);
-
-	for($i=1; $i<=$pages; $i++){
-		$params = "p=$i&birthBegin=&birthEnd=&czCountE=&czCountS=&czE=&czS=&gender=-1&invalidDate=0&jfE=&jfS=&keyword=&kkBegin=&kkEnd=&lxfBegin=&lxfEnd=&mctype=0&mtype=0&notxfDate=0&ostate=0&othkw=&qkE=&qkS=&sortPreField=&sortd=&sortf=&xfBegin=&xfCountE=&xfCountS=&xfE=&xfEnd=&xfS=&xfitem=0&yueE=&yueS=&zjE=&zjS=";
-		$curl -> params = $params;
-		$curl -> url = "http://vip.minicon.net/iframepage/apppage/member_list.aspx";
+	for($i=0; $i<=$pages; $i++){
+		$start = $i*50;
+		$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=$start&limit=50&field=cardNumber&total=";
 		$pagesData = $curl -> getMembersPage();
-
-		$data .= $curl ->getMembersInfo($pagesData, $i);
+		$pagesData = json_decode($pagesData,true);
+		foreach($pagesData['list'] as $v){
+			$data[] = $v;
+		}
 	};
-
     if($data == '') {
         header('Location: index.php');
     }
 
 	$curl -> downMembersCvs($data, $shopname);
 }else if($_GET['action'] == 'curlpackage'){
-    $shopname = $_REQUEST['shopname'];
+    $shopname = isset($_REQUEST['shopname'])?$_REQUEST['shopname']:'会员';
     $data = '';
 
     //获取总数
