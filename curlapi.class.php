@@ -215,7 +215,6 @@ class curlapi{
 				ksort($newdata[$k]);
 			}
 		}
-
 		//导出CVS
 		$cvsstr = "卡号(必填[唯一]),姓名(必填),手机号(必填[唯一]),性别(必填[“0”代表男，“1”代表女]),卡类型(必填[系统编号]),折扣(必填),卡金余额(必填),充值总额,消费次数,消费总额,赠送金,积分,欠款,开卡时间(格式：YYYY-mm-dd),最后消费时间(格式：YYYY-mm-dd),生日(格式：YYYY-mm-dd),会员备注\n";
 		$filename = $shopname.'_会员信息.csv';
@@ -284,64 +283,33 @@ class curlapi{
      * @param $html
      * @param $shopname
      */
-    public function downPackageCvs($html,$shopname){
+    public function downPackageCvs($data,$shopname){
 		$rules = array(
 			//采集tr中的纯文本内容
 			'other' => array('tr','html'),
 		);
 		$newdata = array();
-		$data = QueryList::Query($html, $rules)->data;
-		foreach ($data as $k=>&$item) {
-			$other = explode('</td>', $item['other']);
-			if(count($other) > 8) {
-				//unset($other[0]);//去掉第一空白项
-				$item['other'] = $other;
-				foreach ($other as $k1 => &$v1) {
-					$v1 = strip_tags($v1);;
-					$v1 = preg_replace("/\s\n\t/","",$v1);
-					$v1 = str_replace(' ', '', $v1);
-					$v1= trim(str_replace(PHP_EOL, '', $v1));
-					if($k1 == 5) {
-						$v1 = trim(str_replace(',', '，', $v1));
-						$v1 = explode('项目编号:', $v1);
-						unset($v1[0]);
-					}
-				}
+		foreach($data as $k2=>$v2) {
+			$newA[0] = ''; //手机号
+			$newA[1] = "\t".$v2['cardNumber']; //卡号
+			$newA[2] = $v2['memberName']; //姓名
+			$newA[3] = $v2['levelName']; //卡名称
+			$newA[4] = '次数充值卡'; //卡类型
 
-				foreach($other[5] as $k2=>$v2) {
-					$newA[0] = $other[0]; //手机号
-					$newA[1] = "\t".$other[1]; //卡号
-					$newA[2] = $other[2]; //姓名
-					$newA[3] = $other[3]; //卡名称
-					$newA[4] = $other[4]; //卡类型
+			$newA[5] = '';//项目编号
+			$newA[6] = $v2['poolName'];//项目名称
+			$newA[7] = $v2['rechargedTimes'];//总次数
+			$newA[8] = $v2['remainedTimes'];//剩余次数
+			$newA[9] = $v2['perCost']; //单次消费金额
+			$newA[10] = $v2['remainedTimes']*$v2['perCost']; //剩余金额
+			$newA[11] = '2200-12-01';//失效日期
 
-					$v2 .= "#";
-					//获取项目套餐信息
-					preg_match('/(.*)，项目名称/isU', $v2, $p1);  //项目编号
-					preg_match('/项目名称:(.*)，/isU', $v2, $p2);  //项目名称
-					preg_match('/总次数:(.*)，/isU', $v2, $p3);  //总次数
-					preg_match('/剩余次数:(.*)，/isU', $v2, $p4);  //剩余次数
-					preg_match('/单次消费金额:(.*)，/isU', $v2, $p5);  //单次消费金额
-					preg_match('/剩余金额:(.*)#/isU', $v2, $p6);  //剩余金额
-                    if(!isset($p6[1])) {
-                        preg_match('/剩余金额:(.*)，/isU', $v2, $p6);  //剩余金额
-                    }
-					preg_match('/失效日期：(.*)#/isU', $v2, $p7);  //失效日期
-					$newA[5] = isset($p1[1])?$p1[1]:' ';//项目编号
-					$newA[6] = isset($p2[1])?$p2[1]:' ';//项目名称
-					$newA[7] = isset($p3[1])?$p3[1]:' ';//总次数
-					$newA[8] = isset($p4[1])?$p4[1]:' ';//剩余次数
-					$newA[9] = isset($p5[1])?$p5[1]:' '; //单次消费金额
-					$newA[10] = isset($p6[1])?$p6[1]:' '; //剩余金额
-					$newA[11] = isset($p7[1])?$p7[1]:' ';//失效日期
-
-					$newA[12] = $newA[8];//总剩余次数
-					$newA[13] = $newA[10]; //总剩余金额
-					$newA[14] = $other[8];
-					$newdata[] = $newA;
-				}
-			}
+			$newA[12] = $v2['remainedTimes'];//总剩余次数
+			$newA[13] = $v2['remainedTimes']*$v2['perCost']; //总剩余金额
+			$newA[14] = '';
+			$newdata[] = $newA;
 		}
+
 		//导出CVS
 		$cvsstr = "手机号,卡号,姓名,卡名称,卡类型,项目编号,项目名称,总次数,剩余次数,单次消费金额,剩余金额,失效日期,总剩余次数,总剩余金额\n";
 		$filename = $shopname.'_会员套餐信息.csv';

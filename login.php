@@ -12,8 +12,8 @@ if($_GET['action'] == "code"){//获取验证码
 	$curl -> url = "http://vip.minicon.net/validatecode.aspx";
 	echo $curl -> get_code();
 }else if($_GET['action'] == "login"){
-	$login = 'ncbln';//urlencode($_POST['login']);
-	$passwd = 'bln0807'; //$_POST['passwd'];
+	$login = '037165396001';//urlencode($_POST['login']);
+	$passwd = '123456'; //$_POST['passwd'];
 	$rand = '123'; //$_POST['rand'];
 	$params = "username=$login&password=$passwd&disksn=&rememberme=false&service=http%3A%2F%2Fqht.cloudvast.com%2Findex.do%3Bjsessionid%3DEA527163685A68DEC0B0E83BD3783CC5-n1.q2";
 	$curl -> url = "http://login.cloudvast.com/login";
@@ -29,16 +29,16 @@ if($_GET['action'] == "code"){//获取验证码
 	$data = array();
 
     //获取总数
-	$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=0&limit=50&field=cardNumber&total=7406";
+	$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=0&limit=50&field=cardNumber&total=2443";
 	$rs = $curl -> getMembersPage();
 	$rs = json_decode($rs,true);
     $totals = isset($rs['total'])?$rs['total']:10;
 
     //总页数
-    $pages = ceil($totals/50);
-	for($i=0; $i<=$pages; $i++){
-		$start = $i*50;
-		$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=$start&limit=50&field=cardNumber&total=";
+    $pages = ceil($totals/5000);
+	for($i=0; $i<$pages; $i++){
+		$start = $i*5000;
+		$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=$start&limit=5000&field=cardNumber&total=";
 		$pagesData = $curl -> getMembersPage();
 		$pagesData = json_decode($pagesData,true);
 		foreach($pagesData['list'] as $v){
@@ -48,27 +48,28 @@ if($_GET['action'] == "code"){//获取验证码
     if($data == '') {
         header('Location: index.php');
     }
-
 	$curl -> downMembersCvs($data, $shopname);
 }else if($_GET['action'] == 'curlpackage'){
-    $shopname = isset($_REQUEST['shopname'])?$_REQUEST['shopname']:'会员';
-    $data = '';
+	$data = array();
 
     //获取总数
-    $curl -> url = "http://vip8.sentree.com.cn/shair/timesItem!initTreat.action?set=cash";
-    $rs = $curl -> curl();
-    preg_match('/共(.*)条/isU', $rs, $totals);
-    $totals = isset($totals[1])?$totals[1]:100;
+	$curl -> url = "http://qht.cloudvast.com/member/getMember.do?start=0&limit=50&field=cardNumber&total=2443";
+	$rs = $curl -> getMembersPage();
+	$rs = json_decode($rs,true);
+    $totals = isset($rs['total'])?$rs['total']:10;
 
-	//总页数
-    $pages = ceil($totals/100);
-    for($i=1; $i<=$pages; $i++){
-        $params = "page.currNum=$i&page.rpp=100&set=cash&r=0.3421386775783387";
-        $curl -> params = $params;
-        $curl -> url = "http://vip8.sentree.com.cn/shair/timesItem!initTreat.action";
-        $pagesData = $curl -> getPackagePage();
-        $data .= $curl ->getPackageInfo($pagesData, $i);
-    };
+    //总页数
+    $pages = ceil($totals/5000);
+	for($i=0; $i<$pages; $i++){
+		$start = $i*5000;
+		$curl -> url = "http://qht.cloudvast.com/member/getMemberTimes.do?start=$start&limit=5000&myMembersOnly=true&total=-1";
+		$pagesData = $curl -> getMembersPage();
+		$pagesData = json_decode($pagesData,true);
+		foreach($pagesData['list'] as $v){
+			$data[] = $v;
+		}
+	};
+
     if($data == '') {
         header('Location: index.php');
     }
