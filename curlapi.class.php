@@ -186,36 +186,36 @@ class curlapi{
 
                 $other = $item;
                 //卡号
-                $newdata[$k][0] = "\t".$other['cardnumber']; //卡号
+                $newdata[$k][0] = "\t".$other['cardNumber']; //卡号
                 $newdata[$k][1] = $other['name']; //姓名
-                $newdata[$k][2] = $other['mobilephone']; //手机号
+                $newdata[$k][2] = $other['mobilePhone']; //手机号
                 $newdata[$k][3] = $other['sex'] == 2?'女':'男'; //性别
 
                 //卡类型
-                $newdata[$k][4] = $other['levelname']; //卡类型
+                $newdata[$k][4] = $other['levelName']; //卡类型
 
                 $newdata[$k][5] = 10; //折扣
 
                 //卡金余额信息,
-                $newdata[$k][6] = $other['balanceofcash']; //卡金余额
-                $newdata[$k][12] = $other['owedamount']; //欠款
+                $newdata[$k][6] = $other['balanceOfCash']; //卡金余额
+                $newdata[$k][12] = $other['owedAmount']; //欠款
                 $newdata[$k][7] = $other['totalCash']; //充值总额
                 $newdata[$k][9] = 0; //消费总额
-                $newdata[$k][10] = $other['balanceofbonus']; //赠送金
-                $newdata[$k][8] = $other['totalconsumedtimes']; //消费次数
-                $newdata[$k][11] = $other['balanceofpoints']; //积分
-                $newdata[$k][13] = date('Y-m-d', $other['createtime']/1000); //开卡时间
+                $newdata[$k][10] = $other['balanceOfBonus']; //赠送金
+                $newdata[$k][8] = $other['totalConsumedTimes']; //消费次数
+                $newdata[$k][11] = $other['balanceOfPoints']; //积分
+                $newdata[$k][13] = date('Y-m-d', $other['createTime']/1000); //开卡时间
 
 
                 $newdata[$k][14] = ''; //最后消费时间
-                if($other['lastconsumedate'] != ''){
-                    $other['lastconsumedate'] = str_replace('T', '', $other['lastconsumedate']);
-                    $other['lastconsumedate'] = str_replace('Z', '', $other['lastconsumedate']);
-                    $newdata[$k][14] = date('Y-m-d H:i:s', strtotime($other['lastconsumedate'])); //最后消费时间
+                if($other['lastConsumeDate'] != ''){
+                    $other['lastConsumeDate'] = str_replace('T', '', $other['lastConsumeDate']);
+                    $other['lastConsumeDate'] = str_replace('Z', '', $other['lastConsumeDate']);
+                    $newdata[$k][14] = date('Y-m-d', $other['createTime']/1000); //最后消费时间
                 }
                 $newdata[$k][15] = ''; //生日
-                if($other['birthday'] != ''){
-                    $newdata[$k][15] = date('Y-m-d', $other['birthday']); //生日
+                if($other['birthDay'] != ''){
+                    $newdata[$k][15] = date('Y-m-d', $other['birthDay']/1000); //生日
                 }
                 $newdata[$k][16] = $other['remark']; //会员备注
 
